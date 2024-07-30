@@ -23,4 +23,4 @@ Para números decimais, use vírgula ou ponto, por exemplo: `89.70` ou `54,24`.
 
 ## Autor
 
-Derivan Souza
+[Derivan Souza](https://github.com/DerivanSa)
