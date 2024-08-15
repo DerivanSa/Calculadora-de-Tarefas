@@ -30,7 +30,7 @@ Na página de histórico, você pode visualizar todas as operações realizadas 
 - **Voltar para Home**: Retorne à página principal.
 
 ![Histórico](imagens/his1.png)
-![Histórico](imagens/his2.png)
+![Histórico](imagens/hist2.png)
 
 - **Baixar Histórico**: Exporte o histórico como um arquivo JSON ou em formato Excel.
 
