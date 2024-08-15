@@ -20,28 +20,66 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+        .container h1 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #333;
+            text-align: center;
         }
         .input-group {
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
         .input-group label {
             display: block;
             margin-bottom: 5px;
+            color: #555;
+            text-align: left;
         }
-        .input-group input {
+        .input-group input,
+        .input-group select {
             width: 100%;
-            padding: 8px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
             box-sizing: border-box;
+            text-align: left; /* Alinha o texto à esquerda */
+        }
+        button {
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
         }
         .result {
             margin-top: 20px;
             font-size: 18px;
             font-weight: bold;
+            color: #333;
         }
         .footer {
             margin-top: 20px;
             font-size: 14px;
             color: #777;
+            text-align: center;
+        }
+        .footer a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -57,25 +95,30 @@
         </div>
         <div class="input-group">
             <label for="nascente">Nascente:</label>
-            <input type="number" id="nascente" />
+            <input type="number" id="nascente" step="0.01" />
         </div>
         <div class="input-group">
             <label for="norte">Norte:</label>
-            <input type="number" id="norte" />
+            <input type="number" id="norte" step="0.01" />
         </div>
         <div class="input-group">
             <label for="sul">Sul:</label>
-            <input type="number" id="sul" />
+            <input type="number" id="sul" step="0.01" />
         </div>
         <div class="input-group">
             <label for="poente">Poente:</label>
-            <input type="number" id="poente" />
+            <input type="number" id="poente" step="0.01" />
+        </div>
+        <div class="input-group">
+            <label for="multiplier">Valor da Tarefa (opcional):</label>
+            <input type="number" id="multiplier" step="0.01" />
         </div>
         <button onclick="calculate()">Calcular</button>
+        <button onclick="window.location.href='historico.html'">Ver Histórico</button>
         <div class="result" id="result"></div>
     </div>
     <div class="footer">
-    &copy; 2024 <a href="https://github.com/DerivanSa" target="_blank">Derivan Souza</a>. Todos os direitos reservados.
+        &copy; 2024 <a href="https://github.com/DerivanSa" target="_blank">Derivan Souza</a> | <a href="https://github.com/DerivanSa/Calculadora-de-Tarefas/" target="_blank">Calculadora de Tarefas</a>
     </div>
     <script>
         function calculate() {
@@ -84,11 +127,22 @@
             let norte = parseFloat(document.getElementById('norte').value);
             let sul = parseFloat(document.getElementById('sul').value);
             let poente = parseFloat(document.getElementById('poente').value);
+            let multiplier = parseFloat(document.getElementById('multiplier').value) || 1;
 
             if (isNaN(nascente) || isNaN(norte) || isNaN(sul) || isNaN(poente)) {
                 document.getElementById('result').innerText = 'Por favor, insira valores válidos.';
                 return;
             }
+
+            // Salva os valores originais no localStorage
+            const originalValues = {
+                nascente: nascente,
+                norte: norte,
+                sul: sul,
+                poente: poente,
+                measure: measure
+            };
+            localStorage.setItem('originalValues', JSON.stringify(originalValues));
 
             if (measure === 'meters') {
                 nascente /= 2.2;
@@ -101,8 +155,83 @@
             const avgNorthSouth = (norte + sul) / 2;
             const areaInFathoms = avgEastWest * avgNorthSouth;
             const numberOfTarefas = areaInFathoms / 625;
+            const totalValue = numberOfTarefas * multiplier;
 
-            document.getElementById('result').innerText = `Número de Tarefas: ${numberOfTarefas.toFixed(2)}`;
+            const operation = {
+                id: Date.now(),
+                date: new Date().toLocaleString(),
+                measure: measure === 'meters' ? 'metros' : 'braças',
+                nascente: originalValues.nascente.toFixed(2),
+                norte: originalValues.norte.toFixed(2),
+                sul: originalValues.sul.toFixed(2),
+                poente: originalValues.poente.toFixed(2),
+                multiplier: multiplier !== 1 ? multiplier.toFixed(2) : '',
+                numberOfTarefas: numberOfTarefas.toFixed(2),
+                totalValue: multiplier !== 1 ? totalValue.toFixed(2) : '',
+                note: ''
+            };
+
+            let history = JSON.parse(localStorage.getItem('history')) || [];
+            history.push(operation);
+            localStorage.setItem('history', JSON.stringify(history));
+
+            let resultText = `Número de Tarefas: ${numberOfTarefas.toFixed(2)}`;
+            if (operation.totalValue) {
+                resultText += `\nValor Total: ${operation.totalValue}`;
+            }
+
+            document.getElementById('result').innerText = resultText;
+            updateHistoryList();
+        }
+
+        function updateHistoryList() {
+            const history = JSON.parse(localStorage.getItem('history')) || [];
+            const historyContainer = document.getElementById('history');
+            historyContainer.innerHTML = '';
+
+            history.forEach(operation => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `
+                    <span>${operation.date} - ${operation.measure}</span>
+                    <span>${operation.numberOfTarefas} tarefas - ${operation.totalValue ? operation.totalValue + ' reais' : ''}</span>
+                    <span>
+                        <i class="fas fa-edit" onclick="editOperation(${operation.id})"></i>
+                        <i class="fas fa-trash" onclick="deleteOperation(${operation.id})"></i>
+                    </span>
+                `;
+                historyContainer.appendChild(item);
+            });
+        }
+
+        function deleteOperation(id) {
+            let history = JSON.parse(localStorage.getItem('history')) || [];
+            history = history.filter(operation => operation.id !== id);
+            localStorage.setItem('history', JSON.stringify(history));
+            updateHistoryList();
+        }
+
+        function editOperation(id) {
+            const history = JSON.parse(localStorage.getItem('history')) || [];
+            const operation = history.find(op => op.id === id);
+
+            if (operation) {
+                document.getElementById('note-input').value = operation.note;
+                document.getElementById('save-note-btn').onclick = function() {
+                    operation.note = document.getElementById('note-input').value;
+                    localStorage.setItem('history', JSON.stringify(history));
+                    closePopup();
+                };
+                openPopup();
+            }
+        }
+
+        function openPopup() {
+            document.getElementById('popup-container').style.display = 'block';
+        }
+
+        function closePopup() {
+            document.getElementById('popup-container').style.display = 'none';
         }
     </script>
 </body>
