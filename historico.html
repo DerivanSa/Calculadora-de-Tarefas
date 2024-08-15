@@ -179,7 +179,7 @@
         <div id="popup">
             <span id="popup-close">&times;</span>
             <h2>Editar Nota</h2>
-            <textarea id="editNote" rows="4" style="width: 100%;"></textarea>
+            <textarea id="editNote" rows="4" style="width: 100%;" oninput="this.value = this.value.replace(/\n/g, '')"></textarea>
             <button onclick="saveEditedNote()">Salvar</button>
         </div>
     </div>
@@ -192,6 +192,7 @@
     <script>
         let currentEditIndex = null;
         let filteredHistory = [];
+        let currentOrder = 'dateDesc'; // Armazena o filtro ativo
 
         function parseDate(dateString) {
             const [datePart, timePart] = dateString.split(', ');
@@ -205,8 +206,7 @@
 
         function loadHistory() {
             let history = JSON.parse(localStorage.getItem('history')) || [];
-            history.sort((a, b) => parseDate(b.date) - parseDate(a.date));
-            displayHistory(history);
+            sortHistory(); // Ordena o histórico ao carregar
         }
 
         function saveOperation(operation) {
@@ -214,7 +214,7 @@
             operation.id = generateUniqueId();
             history.push(operation);
             localStorage.setItem('history', JSON.stringify(history));
-            loadHistory();
+            sortHistory(); // Ordena ao salvar a operação
         }
 
         function displayHistory(history) {
@@ -227,10 +227,6 @@
                 item.innerHTML = `
                     <span><strong>Data e Hora:</strong> ${operation.date}</span>
                     <span><strong>Unidade:</strong> ${operation.measure}</span>
-                    <span><strong>Nascente:</strong> ${operation.nascente || 'Não especificado'}</span>
-                    <span><strong>Norte:</strong> ${operation.norte || 'Não especificado'}</span>
-                    <span><strong>Sul:</strong> ${operation.sul || 'Não especificado'}</span>
-                    <span><strong>Poente:</strong> ${operation.poente || 'Não especificado'}</span>
                     <span><strong>Número de Tarefas:</strong> ${operation.numberOfTarefas}</span>
                     <span><strong>Valor da Tarefa:</strong> ${operation.multiplier || 'Não especificado'}</span>
                     <span><strong>Valor Total:</strong> ${operation.totalValue || 'Não especificado'}</span>
@@ -246,7 +242,8 @@
 
         function sortHistory() {
             let history = filteredHistory.length > 0 ? filteredHistory : JSON.parse(localStorage.getItem('history')) || [];
-            const orderBy = document.getElementById('orderBy').value;
+            const orderBy = document.getElementById('orderBy').value || currentOrder;
+            currentOrder = orderBy; // Atualiza o filtro ativo
 
             switch (orderBy) {
                 case 'dateAsc':
@@ -316,7 +313,7 @@
             if (operationIndex > -1) {
                 history[operationIndex].note = document.getElementById('editNote').value;
                 localStorage.setItem('history', JSON.stringify(history));
-                loadHistory();
+                sortHistory(); // Reordenar de acordo com o filtro ativo
                 closePopup(); // Fechar o popup após salvar
             }
         }
