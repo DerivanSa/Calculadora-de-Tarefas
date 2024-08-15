@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórico de Operações</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            margin-top: 0;
+            color: #333;
+        }
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            position: relative;
+            text-align: center;
+        }
+        button {
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        select {
+            margin: 15px 0;
+            padding: 10px;
+            font-size: 16px;
+        }
+        .operation-item {
+            display: flex;
+            flex-direction: column;
+            background: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            text-align: left;
+        }
+        .operation-item span {
+            margin-bottom: 5px;
+        }
+        .operation-item .actions {
+            display: flex;
+            justify-content: space-between;
+        }
+        .actions i {
+            cursor: pointer;
+            margin-left: 10px;
+            margin-right: 10px;
+        }
+        .actions .fa-edit {
+            color: #28a745;
+            font-size: 18px;
+        }
+        .actions .fa-trash {
+            color: #dc3545;
+            font-size: 18px;
+        }
+        #popup-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        #popup {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+        }
+        #popup-close {
+            float: right;
+            cursor: pointer;
+            color: #333;
+            font-size: 20px;
+        }
+        .footer {
+            margin-top: 6px;
+            font-size: 16px;
+            color: #777;
+            text-align: center;
+        }
+        .footer a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        #searchInput {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="history-container">
+        <h1>Histórico de Operações</h1>
+        <button onclick="clearHistory()">Limpar Histórico</button>
+        <button onclick="window.location.href='index.html'" style="margin-top: 10px;">Voltar para Home</button>
+
+        <select id="orderBy" onchange="sortHistory()">
+            <option value="dateDesc">Mais Recentes para Mais Antigas</option>
+            <option value="dateAsc">Mais Antigas para Mais Recentes</option>
+            <option value="tasksDesc">Maior Número de Tarefas para Menor Número de Tarefas</option>
+            <option value="tasksAsc">Menor Número de Tarefas para Maior Número de Tarefas</option>
+            <option value="valueDesc">Maior Valor de Tarefa para Menor Valor de Tarefa</option>
+            <option value="valueAsc">Menor Valor de Tarefa para Maior Valor de Tarefa</option>
+            <option value="totalDesc">Maior Valor Total para Menor Valor Total</option>
+            <option value="totalAsc">Menor Valor Total para Maior Valor Total</option>
+        </select>
+
+        <input type="text" id="searchInput" placeholder="Pesquisar notas..." onkeyup="searchNotes()">
+
+        <div id="history-list" style="margin-top: 20px;"></div>
+    </div>
+
+    <div id="popup-container" onclick="closePopup(event)">
+        <div id="popup">
+            <span id="popup-close">&times;</span>
+            <h2>Editar Nota</h2>
+            <textarea id="editNote" rows="4" style="width: 100%;"></textarea>
+            <button onclick="saveEditedNote()">Salvar</button>
+        </div>
+    </div>
+
+    <div class="footer">
+        &copy; 2024 <a href="https://github.com/DerivanSa" target="_blank">Derivan Souza</a> | 
+        <a href="https://github.com/DerivanSa/Calculadora-de-Tarefas/" target="_blank">Calculadora de Tarefas</a>
+    </div>
+
+    <script>
+        let currentEditIndex = null;
+        let filteredHistory = []; // Variável para armazenar os resultados filtrados pela pesquisa
+
+        function parseDate(dateString) {
+            const [datePart, timePart] = dateString.split(', ');
+            const [day, month, year] = datePart.split('/');
+            return new Date(`${year}-${month}-${day}T${timePart}`);
+        }
+
+        function generateUniqueId() {
+            return Date.now();
+        }
+
+        function loadHistory() {
+            let history = JSON.parse(localStorage.getItem('history')) || [];
+            history.sort((a, b) => parseDate(b.date) - parseDate(a.date));
+            displayHistory(history);
+        }
+
+        function saveOperation(operation) {
+            let history = JSON.parse(localStorage.getItem('history')) || [];
+            operation.id = generateUniqueId();
+            history.push(operation);
+            localStorage.setItem('history', JSON.stringify(history));
+            loadHistory();
+        }
+
+        function displayHistory(history) {
+            const historyContainer = document.getElementById('history-list');
+            historyContainer.innerHTML = '';
+
+            history.forEach((operation) => {
+                const item = document.createElement('div');
+                item.className = 'operation-item';
+                item.innerHTML = `
+                    <span><strong>Data e Hora:</strong> ${operation.date}</span>
+                    <span><strong>Unidade:</strong> ${operation.measure}</span>
+                    <span><strong>Nascente:</strong> ${operation.nascente || 'Não especificado'}</span>
+                    <span><strong>Norte:</strong> ${operation.norte || 'Não especificado'}</span>
+                    <span><strong>Sul:</strong> ${operation.sul || 'Não especificado'}</span>
+                    <span><strong>Poente:</strong> ${operation.poente || 'Não especificado'}</span>
+                    <span><strong>Número de Tarefas:</strong> ${operation.numberOfTarefas}</span>
+                    <span><strong>Valor da Tarefa:</strong> ${operation.multiplier || 'Não especificado'}</span>
+                    <span><strong>Valor Total:</strong> ${operation.totalValue || 'Não especificado'}</span>
+                    <span><strong>Notas:</strong> ${operation.note}</span>
+                    <div class="actions">
+                        <i class="fas fa-edit" onclick="editItem(${operation.id})">  Nota</i>
+                        <i class="fas fa-trash" onclick="deleteItem(${operation.id})">  Excluir</i>
+                    </div>
+                `;
+                historyContainer.appendChild(item);
+            });
+        }
+
+        function sortHistory() {
+            let history = filteredHistory.length > 0 ? filteredHistory : JSON.parse(localStorage.getItem('history')) || [];
+            const orderBy = document.getElementById('orderBy').value;
+
+            switch (orderBy) {
+                case 'dateAsc':
+                    history.sort((a, b) => parseDate(a.date) - parseDate(b.date));
+                    break;
+                case 'dateDesc':
+                    history.sort((a, b) => parseDate(b.date) - parseDate(a.date));
+                    break;
+                case 'tasksAsc':
+                    history.sort((a, b) => a.numberOfTarefas - b.numberOfTarefas);
+                    break;
+                case 'tasksDesc':
+                    history.sort((a, b) => b.numberOfTarefas - a.numberOfTarefas);
+                    break;
+                case 'valueAsc':
+                    history.sort((a, b) => a.multiplier - b.multiplier);
+                    break;
+                case 'valueDesc':
+                    history.sort((a, b) => b.multiplier - a.multiplier);
+                    break;
+                case 'totalAsc':
+                    history.sort((a, b) => a.totalValue - b.totalValue);
+                    break;
+                case 'totalDesc':
+                    history.sort((a, b) => b.totalValue - a.totalValue);
+                    break;
+            }
+
+            displayHistory(history);
+        }
+
+        function searchNotes() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            let history = JSON.parse(localStorage.getItem('history')) || [];
+
+            if (searchTerm) {
+                filteredHistory = history.filter(operation => 
+                    operation.note.toLowerCase().includes(searchTerm)
+                );
+            } else {
+                filteredHistory = [];
+            }
+
+            displayHistory(filteredHistory.length > 0 ? filteredHistory : history);
+        }
+
+        function clearHistory() {
+            if (confirm('Tem certeza que deseja limpar o histórico?')) {
+                localStorage.removeItem('history');
+                loadHistory();
+            }
+        }
+
+        function editItem(id) {
+            let history = JSON.parse(localStorage.getItem('history')) || [];
+            const operation = history.find(op => op.id === id);
+            if (operation) {
+                currentEditIndex = id;
+                document.getElementById('editNote').value = operation.note || '';
+                document.getElementById('popup-container').style.display = 'flex';
+            }
+        }
+
+        function saveEditedNote() {
+            let history = JSON.parse(localStorage.getItem('history')) || [];
+            const operationIndex = history.findIndex(op => op.id === currentEditIndex);
+            if (operationIndex > -1) {
+                history[operationIndex].note = document.getElementById('editNote').value;
+                localStorage.setItem('history', JSON.stringify(history));
+                loadHistory();
+                closePopup();
+            }
+        }
+
+        function closePopup(event) {
+            if (event.target.id === 'popup-container' || event.target.id === 'popup-close') {
+                document.getElementById('popup-container').style.display = 'none';
+            }
+        }
+
+        function deleteItem(id) {
+            if (confirm('Tem certeza que deseja excluir este item?')) {
+                let history = JSON.parse(localStorage.getItem('history')) || [];
+                history = history.filter(op => op.id !== id);
+                localStorage.setItem('history', JSON.stringify(history));
+                loadHistory();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadHistory();
+        });
+    </script>
+</body>
+</html>
