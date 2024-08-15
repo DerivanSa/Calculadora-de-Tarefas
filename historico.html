@@ -29,6 +29,8 @@
             margin-bottom: 20px;
             position: relative;
             text-align: center;
+            margin-top: 16px;
+            
         }
         button {
             background-color: #007BFF;
@@ -109,6 +111,7 @@
             font-size: 16px;
             color: #777;
             text-align: center;
+            margin-bottom: 16px;
         }
         .footer a {
             color: #007BFF;
@@ -124,6 +127,27 @@
             font-size: 16px;
             border-radius: 5px;
             border: 1px solid #ddd;
+            box-sizing: border-box;
+        }
+        select {
+            box-sizing: border-box;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        #jsonButton {
+            background-color: #B5A44B;
+        }
+
+        #jsonButton:hover {
+            background-color: #967D00; /* Cor mais escura para hover */
+        }
+        #excelButton {
+            background-color: #008739;
+        }
+
+        #excelButton:hover {
+            background-color: #007630; /* Cor mais escura para hover */
         }
     </style>
 </head>
@@ -132,6 +156,8 @@
         <h1>Histórico de Operações</h1>
         <button onclick="clearHistory()">Limpar Histórico</button>
         <button onclick="window.location.href='index.html'" style="margin-top: 10px;">Voltar para Home</button>
+        <button id="jsonButton" onclick="downloadJson()">Baixar JSON</button>
+        <button id="excelButton" onclick="downloadExcel()">Baixar Excel</button>
 
         <select id="orderBy" onchange="sortHistory()">
             <option value="dateDesc">Mais Recentes para Mais Antigas</option>
@@ -165,7 +191,7 @@
 
     <script>
         let currentEditIndex = null;
-        let filteredHistory = []; // Variável para armazenar os resultados filtrados pela pesquisa
+        let filteredHistory = [];
 
         function parseDate(dateString) {
             const [datePart, timePart] = dateString.split(', ');
@@ -291,13 +317,16 @@
                 history[operationIndex].note = document.getElementById('editNote').value;
                 localStorage.setItem('history', JSON.stringify(history));
                 loadHistory();
-                closePopup();
+                closePopup(); // Fechar o popup após salvar
             }
         }
 
         function closePopup(event) {
-            if (event.target.id === 'popup-container' || event.target.id === 'popup-close') {
-                document.getElementById('popup-container').style.display = 'none';
+            const popupContainer = document.getElementById('popup-container');
+
+            // Verifica se o clique foi fora do pop-up ou no "X"
+            if (!event || event.target.id === 'popup-container' || event.target.id === 'popup-close') {
+                popupContainer.style.display = 'none'; // Fechar o popup
             }
         }
 
@@ -308,6 +337,57 @@
                 localStorage.setItem('history', JSON.stringify(history));
                 loadHistory();
             }
+        }
+
+        function downloadJson() {
+            let history = JSON.parse(localStorage.getItem('history')) || [];
+            history.sort((a, b) => parseDate(a.date) - parseDate(b.date)); // Ordena do mais antigo para o mais novo
+
+            // Reatribui IDs de forma sequencial
+            history.forEach((operation, index) => {
+                operation.id = index + 1;  // Começa a contagem a partir de 1
+            });
+
+            const jsonContent = JSON.stringify(history, null, 2);
+            const encodedUri = encodeURI("data:application/json;charset=utf-8," + jsonContent);
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", encodedUri);
+            downloadAnchorNode.setAttribute("download", "historico.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        function downloadExcel() {
+            let history = JSON.parse(localStorage.getItem('history')) || [];
+            history.sort((a, b) => parseDate(a.date) - parseDate(b.date)); // Ordena do mais antigo para o mais novo
+
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Data e Hora,Unidade,Nascente,Norte,Sul,Poente,Número de Tarefas,Valor da Tarefa,Valor Total,Notas\n";
+
+            history.forEach(operation => {
+                const row = [
+                    `"${operation.date}"`,  // Adiciona aspas duplas em torno da data e hora
+                    operation.measure,
+                    operation.nascente || '',
+                    operation.norte || '',
+                    operation.sul || '',
+                    operation.poente || '',
+                    operation.numberOfTarefas,
+                    operation.multiplier || '',
+                    operation.totalValue || '',
+                    operation.note
+                ].join(",");
+                csvContent += row + "\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", encodedUri);
+            downloadAnchorNode.setAttribute("download", "historico.csv");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
