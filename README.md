@@ -30,12 +30,12 @@ Na página de histórico, você pode visualizar todas as operações realizadas 
 - **Voltar para Home**: Retorne à página principal.
 
 ![Histórico](imagens/his1.png)
-![Histórico](imagens/his1.png)
+![Histórico](imagens/his2.png)
 
 - **Baixar Histórico**: Exporte o histórico como um arquivo JSON ou em formato Excel.
 
-Json
-```
+**Formato JSON:**
+```json
 [
   {
     "id": 1,
@@ -63,10 +63,11 @@ Json
     "totalValue": "15068.18",
     "note": ""
   }
+]
 ```
-Excel
-![Organizar Itens](imagens/excel.png)
 
+**Formato Excel:**
+![Organizar Itens](imagens/excel.png)
 
 - **Organizar Itens**: Modifique a ordem dos itens exibidos, com opções para visualizar do mais recente ao mais antigo ou outras formas de organização.
 
