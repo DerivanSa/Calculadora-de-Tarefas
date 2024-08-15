@@ -19,8 +19,8 @@ Calcule áreas em metros ou braças para suas tarefas.
 
 4. **Clique em "Calcular"**. O número de tarefas será exibido. Se você inserir o valor da tabela, o valor total também será calculado.
 
-![Página Inicial](imagesns/h1.png)
-![Página Inicial](imagesns/h2.png)
+![Página Inicial](imagens/h1.png)
+![Página Inicial](imagens/h2.png)
 
 **Página de Histórico**
 
