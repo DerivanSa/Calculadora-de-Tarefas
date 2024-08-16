@@ -81,25 +81,46 @@
             font-size: 18px;
         }
         #popup-container {
-            display: none;
-            position: fixed;
+            display: none; /* Mantém o pop-up oculto por padrão */
+            position: fixed; /* Fixa a posição do pop-up em relação à tela */
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
+            background: rgba(0, 0, 0, 0.5); /* Fundo semi-transparente */
+            justify-content: center; /* Centraliza horizontalmente o conteúdo */
+            align-items: center; /* Centraliza verticalmente o conteúdo */
+            overflow: auto; /* Permite rolagem se o conteúdo for muito grande */
+            padding: 20px; /* Adiciona espaçamento interno */
+            box-sizing: border-box; /* Inclui o padding na largura e altura */
         }
+
         #popup {
             background: #fff;
             padding: 20px;
             border-radius: 10px;
             max-width: 400px;
-            width: 100%;
+            width: 100%; /* Faz o pop-up ocupar 100% da largura disponível */
+            max-height: 80%; /* Limita a altura do pop-up a 80% da altura da tela */
+            overflow-y: auto; /* Adiciona rolagem vertical caso o conteúdo ultrapasse a altura */
             text-align: center;
             position: relative;
+            box-sizing: border-box; /* Garante que o padding seja incluído na largura/altura total */
         }
+
+        /* Ajustes para telas menores */
+        @media (max-width: 600px) {
+            #popup {
+                max-width: 100%; /* Faz o pop-up ocupar toda a largura disponível */
+                max-height: 90%; /* Aumenta a altura máxima para 90% da tela */
+                padding: 10px; /* Reduz o padding para telas menores */
+            }
+
+            #popup-close {
+                font-size: 24px; /* Aumenta o tamanho do botão de fechar para facilitar o toque */
+            }
+        }
+        
         #popup-close {
             float: right;
             cursor: pointer;
@@ -148,6 +169,26 @@
 
         #excelButton:hover {
             background-color: #007630; /* Cor mais escura para hover */
+        }
+        
+        #orderBy {
+            width: 100%; /* Ajusta o select para ocupar 100% da largura do container */
+            padding: 10px; /* Mantém o padding igual ao do input */
+            font-size: 16px; /* Mantém o tamanho da fonte igual ao do input */
+            border-radius: 5px; /* Mantém a borda arredondada */
+            border: 1px solid #ddd; /* Mantém a borda igual à do input */
+            box-sizing: border-box; /* Garante que o padding seja incluído na largura total */
+            appearance: none; /* Remove a aparência padrão do select para melhorar a customização */
+            text-overflow: ellipsis; /* Adiciona reticências caso o texto seja muito longo */
+            white-space: nowrap; /* Impede que o texto dentro do select quebre em várias linhas */
+            overflow: hidden; /* Esconde qualquer conteúdo que ultrapasse os limites do select */
+        }
+
+        /* Opcional: Customização para o select, adicionando um ícone de dropdown */
+        #orderBy {
+            background: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="%23000000"><path d="M5.5 7l4.5 4.5 4.5-4.5H5.5z"/></svg>') no-repeat right 10px center;
+            background-size: 1rem;
+            padding-right: 2rem; /* Dá espaço para o ícone de dropdown */
         }
     </style>
 </head>
