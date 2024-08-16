@@ -15,14 +15,32 @@
             background-color: #f0f0f0;
             margin: 0;
         }
+        
         .container {
             background: #fff;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            max-width: 400px;
-            width: 100%;
+            width: 100%; /* Ocupa 100% da largura disponível */
+            max-width: 90%; /* Máximo de 90% da largura da tela */
+            min-width: 280px; /* Mínimo de 280px para garantir legibilidade */
+            margin: 0 auto; /* Centraliza horizontalmente */
+            box-sizing: border-box; /* Inclui o padding na largura total */
         }
+
+        /* Para telas maiores, aumente o max-width */
+        @media (min-width: 768px) {
+            .container {
+                max-width: 600px; /* Aumenta o tamanho máximo para 600px em telas médias */
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .container {
+                max-width: 800px; /* Aumenta o tamanho máximo para 800px em telas maiores */
+            }
+        }
+
         .container h1 {
             margin-bottom: 20px;
             font-size: 24px;
